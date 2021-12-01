@@ -9,5 +9,7 @@
 
 void msm8916_gicv2_init(void);
 void msm8916_gicv2_configure(void);
+bool msm8916_gicv2_wake_cpu(u_register_t mpidr);
+void msm8916_gicv2_cpu_finish_on(void);
 
 #endif /* MSM8916_GICV2_H */

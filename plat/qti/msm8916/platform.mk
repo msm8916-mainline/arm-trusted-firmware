@@ -24,6 +24,7 @@ MSM8916_PM_SOURCES	:=	drivers/arm/cci/cci.c				\
 				plat/qti/msm8916/msm8916_config.c		\
 				plat/qti/msm8916/msm8916_cpu_boot.c		\
 				plat/qti/msm8916/msm8916_pm.c			\
+				plat/qti/msm8916/msm8916_spm.c			\
 				plat/qti/msm8916/msm8916_topology.c
 
 BL31_SOURCES		+=	${MSM8916_PM_SOURCES}				\
@@ -45,6 +46,9 @@ SEPARATE_CODE_AND_RODATA	:= 1
 
 # Single cluster
 WARMBOOT_ENABLE_DCACHE_EARLY	:= 1
+
+# Use PSCI v1.0 extended StateID format
+PSCI_EXTENDED_STATE_ID		:= 1
 
 # Disable features unsupported in ARMv8.0
 ENABLE_SPE_FOR_NS		:= 0
