@@ -18,16 +18,21 @@ PLAT_BL_COMMON_SOURCES	:=	${GICV2_SOURCES}				\
 				plat/qti/msm8916/${ARCH}/uartdm_console.S
 
 MSM8916_CPU		:=	$(if ${ARM_CORTEX_A7},cortex_a7,cortex_a53)
-MSM8916_PM_SOURCES	:=	drivers/arm/cci/cci.c				\
-				lib/cpus/${ARCH}/${MSM8916_CPU}.S		\
-				plat/common/plat_psci_common.c			\
-				plat/qti/msm8916/msm8916_config.c		\
+MSM8916_PSCI_SOURCES	:=	plat/common/plat_psci_common.c			\
 				plat/qti/msm8916/msm8916_cpu_boot.c		\
 				plat/qti/msm8916/msm8916_pm.c			\
 				plat/qti/msm8916/msm8916_topology.c
+MSM8916_PM_SOURCES	:=	drivers/arm/cci/cci.c				\
+				lib/cpus/${ARCH}/${MSM8916_CPU}.S		\
+				plat/qti/msm8916/msm8916_config.c		\
+				${MSM8916_PSCI_SOURCES}
 
-BL31_SOURCES		+=	${MSM8916_PM_SOURCES}				\
+BL31_ONLY_SOURCES	+=	${MSM8916_PM_SOURCES}				\
 				plat/qti/msm8916/msm8916_bl31_setup.c
+
+BL33H_SOURCES		+=	${MSM8916_PSCI_SOURCES}				\
+				plat/qti/msm8916/msm8916_bl33h_setup.c		\
+				plat/qti/msm8916/msm8916_bl33h_sip_svc.c
 
 PLAT_INCLUDES		:=	-Iplat/qti/msm8916/include
 
@@ -73,6 +78,7 @@ endif
 # ------------------
 BL31_BASE			?= 0x86500000
 PRELOADED_BL33_BASE		?= 0x8f600000
+BL33H_BASE			?= 0x86400000
 
 ifeq (${ARCH},aarch64)
 BL32_BASE			?= BL31_LIMIT
@@ -82,6 +88,7 @@ else
 BL32_BASE			?= $(BL31_BASE)
 endif
 $(eval $(call add_define,BL32_BASE))
+$(eval $(call add_define,BL33H_BASE))
 
 # UART number to use for TF-A output during early boot
 QTI_UART_NUM			?= 2

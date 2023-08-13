@@ -480,6 +480,7 @@ DEFINE_SYSREG_RW_FUNCS(vtcr_el2)
 #define clr_cntp_ctl_enable(x)  ((x) &= ~(U(1) << CNTP_CTL_ENABLE_SHIFT))
 #define clr_cntp_ctl_imask(x)   ((x) &= ~(U(1) << CNTP_CTL_IMASK_SHIFT))
 
+DEFINE_SYSREG_RW_FUNCS(tpidr_el2)
 DEFINE_SYSREG_RW_FUNCS(tpidr_el3)
 
 DEFINE_SYSREG_RW_FUNCS(cntvoff_el2)

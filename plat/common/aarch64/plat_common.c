@@ -87,7 +87,11 @@ void plat_default_ea_handler(unsigned int ea_reason, uint64_t syndrome, void *co
 	if (handled != 0)
 		return;
 #endif
+#if !IMAGE_AT_EL2
 	unsigned int level = (unsigned int)GET_EL(read_spsr_el3());
+#else
+	unsigned int level = (unsigned int)GET_EL(read_spsr_el2());
+#endif
 
 	ERROR_NL();
 	ERROR("Unhandled External Abort received on 0x%lx from %s\n",

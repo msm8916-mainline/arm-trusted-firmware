@@ -153,9 +153,9 @@ endfunc asm_print_newline
 	panic_msg: .asciz "PANIC at PC : 0x"
 
 func elx_panic
-#if CRASH_REPORTING && defined(IMAGE_BL31)
+#if CRASH_REPORTING && (defined(IMAGE_BL31) || defined(IMAGE_BL33H))
 	b	report_elx_panic
-#endif /* CRASH_REPORTING && IMAGE_BL31 */
+#endif /* CRASH_REPORTING && (IMAGE_BL31 || IMAGE_BL33H) */
 
 	b	panic_common
 endfunc elx_panic
@@ -168,9 +168,9 @@ endfunc elx_panic
  */
 
 func el3_panic
-#if CRASH_REPORTING && defined(IMAGE_BL31)
+#if CRASH_REPORTING && (defined(IMAGE_BL31) || defined(IMAGE_BL33H))
 	b	report_el3_panic
-#endif /* CRASH_REPORTING && IMAGE_BL31 */
+#endif /* CRASH_REPORTING && (IMAGE_BL31 || IMAGE_BL33H) */
 
 panic_common:
 	mov	x6, x30

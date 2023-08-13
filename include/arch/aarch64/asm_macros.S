@@ -10,6 +10,19 @@
 #include <common/asm_macros_common.S>
 #include <lib/spinlock.h>
 
+#if IMAGE_AT_EL2
+#define cptr_el3	cptr_el2
+#define elr_el3		elr_el2
+#define esr_el3		esr_el2
+#define far_el3		far_el2
+#define mair_el3	mair_el2
+#define sctlr_el3	sctlr_el2
+#define spsr_el3	spsr_el2
+#define tcr_el3		tcr_el2
+#define tpidr_el3	tpidr_el2
+#define ttbr0_el3	ttbr0_el2
+#endif
+
 /*
  * TLBI instruction with type specifier that implements the workaround for
  * errata 813419 of Cortex-A57 or errata 1286807 of Cortex-A76.

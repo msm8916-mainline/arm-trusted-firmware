@@ -310,7 +310,11 @@ static void setup_context_common(cpu_context_t *ctx, const entry_point_info_t *e
 	 * the required value depending on the state of the SPSR_EL3 and the
 	 * Security state and entrypoint attributes of the next EL.
 	 */
+#if !IMAGE_AT_EL2
 	scr_el3 = read_scr();
+#else
+	scr_el3 = 0;
+#endif
 	scr_el3 &= ~(SCR_NS_BIT | SCR_RW_BIT | SCR_EA_BIT | SCR_FIQ_BIT | SCR_IRQ_BIT |
 			SCR_ST_BIT | SCR_HCE_BIT | SCR_NSE_BIT);
 
@@ -380,7 +384,11 @@ static void setup_context_common(cpu_context_t *ctx, const entry_point_info_t *e
 	 * CPTR_EL3 was initialized out of reset, copy that value to the
 	 * context register.
 	 */
+#if !IMAGE_AT_EL2
 	write_ctx_reg(get_el3state_ctx(ctx), CTX_CPTR_EL3, read_cptr_el3());
+#else
+	write_ctx_reg(get_el3state_ctx(ctx), CTX_CPTR_EL3, read_cptr_el2());
+#endif
 
 	/*
 	 * SCR_EL3.HCE: Enable HVC instructions if next execution state is
@@ -698,7 +706,11 @@ void cm_init_my_context(const entry_point_info_t *ep)
 /* EL2 present but unused, need to disable safely. SCTLR_EL2 can be ignored */
 static __unused void init_nonsecure_el2_unused(cpu_context_t *ctx)
 {
+#if IMAGE_AT_EL2
+	u_register_t hcr_el2 = read_hcr_el2();
+#else
 	u_register_t hcr_el2 = HCR_RESET_VAL;
+#endif
 	u_register_t mdcr_el2;
 	u_register_t scr_el3;
 
@@ -1152,7 +1164,7 @@ void cm_el2_sysregs_context_restore(uint32_t security_state)
  ******************************************************************************/
 void cm_prepare_el3_exit_ns(void)
 {
-#if CTX_INCLUDE_EL2_REGS
+#if CTX_INCLUDE_EL2_REGS && !IMAGE_AT_EL2
 #if ENABLE_ASSERTIONS
 	cpu_context_t *ctx = cm_get_context(NON_SECURE);
 	assert(ctx != NULL);

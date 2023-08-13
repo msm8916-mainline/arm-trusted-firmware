@@ -55,6 +55,7 @@
  */
 #if defined(USE_ARM_LINK)
 #define __BL31_END__			Load$$LR$$LR_END$$Base
+#define __BL33H_END__			Load$$LR$$LR_END$$Base
 #define __BSS_START__			Load$$LR$$LR_BSS$$Base
 #define __BSS_END__			Load$$LR$$LR_BSS$$Limit
 #define __BSS_SIZE__			Load$$LR$$LR_BSS$$Length
@@ -130,6 +131,8 @@ IMPORT_SYM(uintptr_t, __BL31_START__,		BL31_START);
 IMPORT_SYM(uintptr_t, __BL31_END__,		BL31_END);
 #elif defined(IMAGE_BL32)
 IMPORT_SYM(uintptr_t, __BL32_END__,		BL32_END);
+#elif defined(IMAGE_BL33H)
+IMPORT_SYM(uintptr_t, __BL33H_END__,		BL33H_END);
 #elif defined(IMAGE_RMM)
 IMPORT_SYM(uintptr_t, __RMM_END__,		RMM_END);
 #endif /* IMAGE_BLX */

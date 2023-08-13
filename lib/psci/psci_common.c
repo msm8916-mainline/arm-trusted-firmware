@@ -842,7 +842,11 @@ static int psci_get_ns_ep_info(entry_point_info_t *ep,
 {
 	u_register_t ep_attr, sctlr;
 	unsigned int daif, ee, mode;
+#if !IMAGE_AT_EL2
 	u_register_t ns_scr_el3 = read_scr_el3();
+#else
+	u_register_t ns_scr_el3 = read_hcr_el2() & HCR_RW_BIT ? SCR_RW_BIT : 0;
+#endif
 	u_register_t ns_sctlr_el1 = read_sctlr_el1();
 
 	sctlr = ((ns_scr_el3 & SCR_HCE_BIT) != 0U) ?

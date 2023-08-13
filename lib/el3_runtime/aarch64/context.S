@@ -509,9 +509,11 @@ endfunc fpregs_context_restore
 	 * Set SCR_EL3.EA bit to enable SErrors at EL3
 	 */
 	.macro enable_serror_at_el3
+#if !IMAGE_AT_EL2
 	mrs     x8, scr_el3
 	orr     x8, x8, #SCR_EA_BIT
 	msr     scr_el3, x8
+#endif
 	.endm
 
 	/*
@@ -794,9 +796,13 @@ sve_not_enabled:
 	 * Restore SPSR_EL3, ELR_EL3 and SCR_EL3 prior to ERET
 	 * ----------------------------------------------------------
 	 */
+#if !IMAGE_AT_EL2
 	ldr	x18, [sp, #CTX_EL3STATE_OFFSET + CTX_SCR_EL3]
+#endif
 	ldp	x16, x17, [sp, #CTX_EL3STATE_OFFSET + CTX_SPSR_EL3]
+#if !IMAGE_AT_EL2
 	msr	scr_el3, x18
+#endif
 	msr	spsr_el3, x16
 	msr	elr_el3, x17
 

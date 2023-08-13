@@ -178,7 +178,11 @@ struct cpu_data *_cpu_data_by_index(uint32_t cpu_index);
 /* Return the cpu_data structure for the current CPU. */
 static inline struct cpu_data *_cpu_data(void)
 {
+#if IMAGE_AT_EL2
+	return (cpu_data_t *)read_tpidr_el2();
+#else
 	return (cpu_data_t *)read_tpidr_el3();
+#endif
 }
 #else
 struct cpu_data *_cpu_data(void);

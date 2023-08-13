@@ -62,6 +62,7 @@ func handle_lower_el_sync_ea
 	stp	x2, x3, [sp, #CTX_GPREGS_OFFSET + CTX_GPREG_X2]
 	stp	x4, x5, [sp, #CTX_GPREGS_OFFSET + CTX_GPREG_X4]
 
+#if !IMAGE_BL33H
 	/* Get the cpu_ops pointer */
 	bl	get_cpu_ops_ptr
 
@@ -76,6 +77,7 @@ func handle_lower_el_sync_ea
 	mrs	x1, esr_el3
 	ubfx	x1, x1, #ESR_EC_SHIFT, #ESR_EC_LENGTH
 	blr	x0
+#endif
 	b	2f
 
 1:
@@ -240,9 +242,14 @@ func ea_proceed
 	 * Save ESR as handling might involve lower ELs, and returning back to
 	 * EL3 from there would trample the original ESR.
 	 */
+#if IMAGE_AT_EL2
+	mrs	x5, esr_el2
+	str	x5, [sp, #CTX_EL3STATE_OFFSET + CTX_ESR_EL3]
+#else
 	mrs	x4, scr_el3
 	mrs	x5, esr_el3
 	stp	x4, x5, [sp, #CTX_EL3STATE_OFFSET + CTX_SCR_EL3]
+#endif
 
 	/*
 	 * Setup rest of arguments, and call platform External Abort handler.
@@ -289,8 +296,12 @@ func ea_proceed
 	msr	elr_el3, x2
 
 	/* Restore ESR_EL3 and SCR_EL3 */
+#if IMAGE_AT_EL2
+	ldr	x4, [sp, #CTX_EL3STATE_OFFSET + CTX_ESR_EL3]
+#else
 	ldp	x3, x4, [sp, #CTX_EL3STATE_OFFSET + CTX_SCR_EL3]
 	msr	scr_el3, x3
+#endif
 	msr	esr_el3, x4
 
 #if ENABLE_ASSERTIONS

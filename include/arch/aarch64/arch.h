@@ -82,9 +82,17 @@
 #define ICC_ASGI1R		S3_0_C12_C11_6
 #define ICC_SRE_EL1		S3_0_C12_C12_5
 #define ICC_SRE_EL2		S3_4_C12_C9_5
+#if IMAGE_AT_EL2
+#define ICC_SRE_EL3		ICC_SRE_EL2
+#else
 #define ICC_SRE_EL3		S3_6_C12_C12_5
+#endif
 #define ICC_CTLR_EL1		S3_0_C12_C12_4
+#if IMAGE_AT_EL2
+#define ICC_CTLR_EL3		ICC_CTLR_EL1
+#else
 #define ICC_CTLR_EL3		S3_6_C12_C12_4
+#endif
 #define ICC_PMR_EL1		S3_0_C4_C6_0
 #define ICC_RPR_EL1		S3_0_C12_C11_3
 #define ICC_IGRPEN1_EL3		S3_6_c12_c12_7

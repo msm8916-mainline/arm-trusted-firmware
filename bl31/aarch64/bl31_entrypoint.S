@@ -8,7 +8,12 @@
 
 #include <arch.h>
 #include <common/bl_common.h>
+#if IMAGE_AT_EL2
+#include <el2_common_macros.S>
+#define el3_entrypoint_common	el2_entrypoint_common
+#else
 #include <el3_common_macros.S>
+#endif
 #include <lib/pmf/aarch64/pmf_asm_macros.S>
 #include <lib/runtime_instr.h>
 #include <lib/xlat_tables/xlat_mmu_helpers.h>
@@ -182,7 +187,11 @@ func bl31_warm_entrypoint
 #else
 	mov	x0, #DISABLE_DCACHE
 #endif
+#if !IMAGE_BL33H
 	bl	bl31_plat_enable_mmu
+#else
+	bl	enable_mmu_direct_el2
+#endif
 
 #if ENABLE_RME
 	/*

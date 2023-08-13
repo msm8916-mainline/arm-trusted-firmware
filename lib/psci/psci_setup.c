@@ -287,7 +287,7 @@ int __init psci_setup(const psci_lib_args_t *lib_args)
  ******************************************************************************/
 void psci_arch_setup(void)
 {
-#if (ARM_ARCH_MAJOR > 7) || defined(ARMV7_SUPPORTS_GENERIC_TIMER)
+#if ((ARM_ARCH_MAJOR > 7) || defined(ARMV7_SUPPORTS_GENERIC_TIMER)) && !IMAGE_AT_EL2
 	/* Program the counter frequency */
 	write_cntfrq_el0(plat_get_syscnt_freq2());
 #endif

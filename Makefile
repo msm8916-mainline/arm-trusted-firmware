@@ -720,6 +720,10 @@ ifeq ($(ENABLE_PIE),1)
 	BL32_CPPFLAGS	+=	-fpie
 	BL32_CFLAGS	+=	-fpie
 	BL32_LDFLAGS	+=	$(PIE_LDFLAGS)
+
+	BL33H_CPPFLAGS	+=	-fpie
+	BL33H_CFLAGS 	+=	-fpie
+	BL33H_LDFLAGS	+=	$(PIE_LDFLAGS)
 endif #(ENABLE_PIE)
 
 BL1_CPPFLAGS  += -DREPORT_ERRATA=${DEBUG}
@@ -737,6 +741,7 @@ ifeq (${ARCH},aarch64)
 	BL2U_CPPFLAGS += -DIMAGE_AT_EL1
 	BL31_CPPFLAGS += -DIMAGE_AT_EL3
 	BL32_CPPFLAGS += -DIMAGE_AT_EL1
+	BL33H_CPPFLAGS += -DIMAGE_AT_EL2
 else
 	BL32_CPPFLAGS += -DIMAGE_AT_EL3
 endif
@@ -1070,12 +1075,15 @@ endif #(SCP_BL2)
 
 # For AArch32, BL31 is not currently supported.
 ifneq (${ARCH},aarch32)
-	ifdef BL31_SOURCES
+	ifneq (${BL31_SOURCES}${BL31_ONLY_SOURCES},)
 	# When booting an EL3 payload, there is no need to compile the BL31
 	# image nor put it in the FIP.
 		ifndef EL3_PAYLOAD_BASE
 			NEED_BL31 := yes
 		endif
+	endif
+	ifneq (${BL33H_SOURCES},)
+		NEED_BL33H := yes
 	endif
 endif #(ARCH=aarch64)
 
@@ -1128,6 +1136,10 @@ endif
 
 ifeq (${NEED_BL31},yes)
 include bl31/bl31.mk
+endif
+
+ifeq (${NEED_BL33H},yes)
+include bl33h/bl33h.mk
 endif
 
 ################################################################################
@@ -1488,7 +1500,7 @@ endif #(NEED_SCP_BL2)
 ifeq (${NEED_BL31},yes)
 BL31_SOURCES += ${SPD_SOURCES}
 # Sort BL31 source files to remove duplicates
-BL31_SOURCES := $(sort ${BL31_SOURCES})
+BL31_SOURCES := $(sort ${BL31_ONLY_SOURCES} ${BL31_SOURCES})
 ifneq (${DECRYPTION_SUPPORT},none)
 $(if ${BL31}, $(eval $(call TOOL_ADD_IMG,bl31,--soc-fw,,$(ENCRYPT_BL31))),\
 	$(eval $(call MAKE_BL,bl31,soc-fw,,$(ENCRYPT_BL31))))
@@ -1530,6 +1542,18 @@ endif #(NEED_RMM)
 ifeq (${NEED_BL33},yes)
 $(eval $(call TOOL_ADD_IMG,bl33,--nt-fw))
 endif #(NEED_BL33)
+
+ifeq (${NEED_BL33H},yes)
+# Sort BL33H source files to remove duplicates
+BL33H_SOURCES := $(sort ${BL33H_SOURCES})
+ifneq (${DECRYPTION_SUPPORT},none)
+$(if ${BL33H}, $(eval $(call TOOL_ADD_IMG,bl33h,--soc-fw,,$(ENCRYPT_BL33H))),\
+	$(eval $(call MAKE_BL,bl33h,soc-fw,,$(ENCRYPT_BL33H))))
+else
+$(if ${BL33H}, $(eval $(call TOOL_ADD_IMG,bl33h,--soc-fw)),\
+	$(eval $(call MAKE_BL,bl33h,soc-fw)))
+endif #(DECRYPTION_SUPPORT)
+endif #(NEED_BL33H)
 
 ifeq (${NEED_BL2U},yes)
 $(if ${BL2U}, $(eval $(call TOOL_ADD_IMG,bl2u,--ap-fwu-cfg,FWU_)),\

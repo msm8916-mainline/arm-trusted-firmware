@@ -13,7 +13,12 @@
 #include <bl31/sync_handle.h>
 #include <common/runtime_svc.h>
 #include <context.h>
+#if IMAGE_AT_EL2
+#include <el2_common_macros.S>
+#define el3_entrypoint_common	el2_entrypoint_common
+#else
 #include <el3_common_macros.S>
+#endif
 #include <lib/el3_runtime/cpu_data.h>
 #include <lib/smccc.h>
 
@@ -138,11 +143,35 @@
 	ubfx	x30, x30, #ESR_EC_SHIFT, #ESR_EC_LENGTH
 
 	/* Handle SMC exceptions separately from other synchronous exceptions */
+#if !IMAGE_AT_EL2
 	cmp	x30, #EC_AARCH32_SMC
 	b.eq	smc_handler32
 
 	cmp	x30, #EC_AARCH64_SMC
 	b.eq	sync_handler64
+#else
+	cmp	x30, #EC_AARCH32_HVC
+	b.eq	smc_handler32
+
+	cmp	x30, #EC_AARCH64_HVC
+	b.eq	sync_handler64
+
+	/* Handle trapped SMCs */
+	cmp	x30, #EC_AARCH32_SMC
+	b.ne	1f
+	mrs	x30, elr_el2
+	add	x30, x30, #4
+	msr	elr_el2, x30
+	b	smc_handler32
+1:
+	cmp	x30, #EC_AARCH64_SMC
+	b.ne	2f
+	mrs	x30, elr_el2
+	add	x30, x30, #4
+	msr	elr_el2, x30
+	b	sync_handler64
+2:
+#endif
 
 	cmp	x30, #EC_AARCH64_SYS
 	b.eq	sync_handler64
@@ -387,8 +416,10 @@ sync_handler64:
 	mrs	x17, elr_el3
 	stp	x16, x17, [x6, #CTX_EL3STATE_OFFSET + CTX_SPSR_EL3]
 
+#if !IMAGE_AT_EL2
 	/* Load SCR_EL3 */
 	mrs	x18, scr_el3
+#endif
 
 	/* check for system register traps */
 	mrs	x16, esr_el3
@@ -396,6 +427,7 @@ sync_handler64:
 	cmp	x17, #EC_AARCH64_SYS
 	b.eq	sysreg_handler64
 
+#if !IMAGE_AT_EL2
 	/* Clear flag register */
 	mov	x7, xzr
 
@@ -413,6 +445,9 @@ sync_handler64:
 
 	/* Copy SCR_EL3.NS bit to the flag to indicate caller's security */
 	bfi	x7, x18, #0, #1
+#else
+	mov	x7, #1	/* Always non-secure */
+#endif /* !IMAGE_AT_EL2 */
 
 	mov	sp, x12
 
@@ -590,9 +625,13 @@ func handle_interrupt_exception
 
 	mov	x0, #INTR_ID_UNAVAILABLE
 
+#if !IMAGE_AT_EL2
 	/* Set the current security state in the 'flags' parameter */
 	mrs	x2, scr_el3
 	ubfx	x1, x2, #0, #1
+#else
+	mov	x1, #1	/* Always non-secure */
+#endif
 
 	/* Restore the reference to the 'handle' i.e. SP_EL3 */
 	mov	x2, x20

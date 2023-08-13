@@ -36,10 +36,17 @@ gp_regs:
 		"x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15",\
 		"x16", "x17", "x18", "x19", "x20", "x21", "x22",\
 		"x23", "x24", "x25", "x26", "x27", "x28", "x29", ""
+#if !IMAGE_AT_EL2
 el3_sys_regs:
 	.asciz	"scr_el3", "sctlr_el3", "cptr_el3", "tcr_el3",\
 		"daif", "mair_el3", "spsr_el3", "elr_el3", "ttbr0_el3",\
 		"esr_el3", "far_el3", ""
+#else
+el3_sys_regs:
+	.asciz	"hcr_el2", "sctlr_el2", "cptr_el2", "tcr_el2",\
+		"daif", "mair_el2", "spsr_el2", "elr_el2", "ttbr0_el2",\
+		"esr_el2", "far_el2", ""
+#endif
 
 non_el3_sys_regs:
 	.asciz	"spsr_el1", "elr_el1", "spsr_abt", "spsr_und",\
@@ -381,7 +388,11 @@ do_crash_reporting:
 	/* Print the el3 sys registers */
 print_el3_sys_regs:
 	adr	x6, el3_sys_regs
+#if IMAGE_AT_EL2
+	mrs	x8, hcr_el2
+#else
 	mrs	x8, scr_el3
+#endif
 	mrs	x9, sctlr_el3
 	mrs	x10, cptr_el3
 	mrs	x11, tcr_el3

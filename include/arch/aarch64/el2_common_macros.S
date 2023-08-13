@@ -42,6 +42,18 @@
 	msr	sctlr_el2, x0
 	isb
 
+#ifdef IMAGE_BL33H
+	/* ---------------------------------------------------------------------
+	 * Initialise the per-cpu cache pointer to the CPU.
+	 * This is done early to enable crash reporting to have access to crash
+	 * stack. Since crash reporting depends on cpu_data to report the
+	 * unhandled exception, not doing so can lead to recursive exceptions
+	 * due to a NULL TPIDR_EL3.
+	 * ---------------------------------------------------------------------
+	 */
+	bl	init_cpu_data_ptr
+#endif /* IMAGE_BL33H */
+
 	/* ---------------------------------------------------------------------
 	 * Initialise HCR_EL2, setting all fields rather than relying on HW.
 	 * All fields are architecturally UNKNOWN on reset. The following fields
@@ -68,6 +80,9 @@
 	 */
 	mov_imm	x0, ((HCR_RESET_VAL | HCR_TEA_BIT) \
 			& ~(HCR_TWE_BIT | HCR_TWI_BIT | HCR_HCD_BIT))
+#if IMAGE_BL33H
+	orr	x0, x0, #(1 << 19) /* TSC: Trap SMC instructions */
+#endif
 #if CTX_INCLUDE_PAUTH_REGS
 	/*
 	 * If the pointer authentication registers are saved during world
@@ -335,6 +350,30 @@
 	 * ---------------------------------------------------------------------
 	 */
 	.if \_init_c_runtime
+#if ENABLE_PIE
+#if SEPARATE_CODE_AND_RODATA
+		adrp	x0, __TEXT_START__
+		add	x0, x0, :lo12:__TEXT_START__
+#else
+		adrp	x0, __RO_START__
+		add	x0, x0, :lo12:__RO_START__
+#endif /* SEPARATE_CODE_AND_RODATA */
+#else
+		adrp	x0, __RW_START__
+		add	x0, x0, :lo12:__RW_START__
+#endif /* ENABLE_PIE */
+		adrp	x1, __RW_END__
+		add	x1, x1, :lo12:__RW_END__
+		sub	x1, x1, x0
+		bl	inv_dcache_range
+#if defined(IMAGE_BL33H) && SEPARATE_NOBITS_REGION
+		adrp	x0, __NOBITS_START__
+		add	x0, x0, :lo12:__NOBITS_START__
+		adrp	x1, __NOBITS_END__
+		add	x1, x1, :lo12:__NOBITS_END__
+		sub	x1, x1, x0
+		bl	inv_dcache_range
+#endif
 		adrp	x0, __BSS_START__
 		add	x0, x0, :lo12:__BSS_START__
 
@@ -342,6 +381,15 @@
 		add	x1, x1, :lo12:__BSS_END__
 		sub	x1, x1, x0
 		bl	zeromem
+
+#if USE_COHERENT_MEM
+		adrp	x0, __COHERENT_RAM_START__
+		add	x0, x0, :lo12:__COHERENT_RAM_START__
+		adrp	x1, __COHERENT_RAM_END_UNALIGNED__
+		add	x1, x1, :lo12: __COHERENT_RAM_END_UNALIGNED__
+		sub	x1, x1, x0
+		bl	zeromem
+#endif
 
 #if defined(IMAGE_BL1) || (defined(IMAGE_BL2) && \
 	RESET_TO_BL2 && BL2_IN_XIP_MEM)
